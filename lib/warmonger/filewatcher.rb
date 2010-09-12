@@ -56,9 +56,9 @@ module WarMonger
     
     def get_handlers_for source_path
       @handlers.each do |h|
-        if h[:path_matcher]
-          if h[:path_matcher].match(source_path)
-            yield h[:handler]
+        if h[:path_matcher] or h[:path_exclude_matcher]
+          if !h[:path_exclude_matcher] or !h[:path_exclude_matcher].match(source_path)
+            yield h[:handler] if !h[:path_matcher] or h[:path_matcher].match(source_path)
           end
         else
           yield h[:handler]
