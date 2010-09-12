@@ -1,12 +1,23 @@
+# spec needs refactoring.. copyhandler and watcher are now seperate
+# classes
 require File.join( File.dirname(__FILE__), '..', 'spec_helper' )
 
-describe WarMonger::Builder do
+describe WarMonger::FileWatcher do
 
   before :all do
     @source_dir = File.expand_path File.join(File.dirname(__FILE__), '../sandbox/source')
     @dest_dir = File.expand_path File.join(File.dirname(__FILE__) , '../sandbox/dest')
-    @builder = WarMonger::Builder.new @source_dir, @dest_dir
-    @process_id= Kernel::fork { @builder.watch_for_changes }
+
+    @watcher = WarMonger::FileWatcher.new @source_dir
+    copy_handler = WarMonger::CopyHandler.new(@source_dir, @dest_dir)
+    @watcher.add_change_handler :handler => copy_handler
+
+    # @watcher.add_change_handler do |h|
+    #   h.path_matcher = /*/
+    #   h.handler = copy_handler
+    # end
+
+    @process_id= Kernel::fork { @watcher.watch }
     @source_file = File.join(@source_dir, "file1")
     @dest_file = File.join(@dest_dir, "file1")
     sleep(1)
@@ -14,9 +25,9 @@ describe WarMonger::Builder do
   
   after :all do
     Process.kill("TERM", @process_id)
-  end   
+  end
 
-  describe "watch_for_changes" do
+  describe "watch" do
 
     before :each do
       File.delete(@dest_file) if File.exist? @dest_file

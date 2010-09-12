@@ -1,3 +1,5 @@
 $LOAD_PATH << File.join( File.dirname(__FILE__), 'warmonger' )
 
-require 'builder'
+require 'filewatcher'
+require 'handlers/copyhandler'
+require 'handlers/compilehandler'
