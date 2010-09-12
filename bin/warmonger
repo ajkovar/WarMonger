@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+
+$LOAD_PATH << File.join( File.dirname(__FILE__), '..', 'lib' )
+
+require 'warmonger'
+
+webapp_source_dir=ARGV[0]
+webapp_target_dir=ARGV[1]
+
+java_source_dir = "/home/alex/workspace/Floydware/src"
+java_target_dir = "/home/alex/JBoss/jboss-4.2.3.GA/server/default/deploy/floydware.war/WEB-INF/classes"
+
+# watch the web app directory for changes, deploy them as they happen
+webapp_watcher = WarMonger::FileWatcher.new webapp_source_dir
+webapp_watcher.add_change_handler(:handler => WarMonger::CopyHandler.new(webapp_source_dir, webapp_target_dir))
+webapp_watcher_pid = Kernel::fork { webapp_watcher.watch }
+
+# watch the java source directory for changes
+compile_watcher = WarMonger::FileWatcher.new java_source_dir
+
+# just copy of files that aren't .java files
+compile_watcher.add_change_handler(:path_exclude_matcher => /*.java/, :handler => WarMonger::CopyHandler.new(java_source_dir, java_target_dir))
+
+# if it is a .java file, compile it to the target directory
+compile_handler = WarMonger::CompileHandler.new(java_source_dir, java_target_dir)
+classpath = File.join(webapp_source_dir, "lib", "*.jar")
+compile_handler.add_classpath classpath
+compile_watcher.add_change_handler(:path_exclude_matcher => /*.java/, :handler => compile_handler)
+
+compile_watcher_pid = Kernel::fork { compile_watcher.watch }
+
+process_id= Kernel::fork { watcher.watch }
+Process.kill("TERM", process_id)
