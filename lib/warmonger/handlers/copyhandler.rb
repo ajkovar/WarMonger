@@ -8,7 +8,6 @@ module WarMonger
       last_char_of = lambda { |str| str[str.length-1].chr }
       @source_directory+="/" if last_char_of.call(@source_directory)!="/"
       @target_directory+="/" if last_char_of.call(@target_directory)!="/"
-      @matches = 
     end
 
     def handle_remove source_path
