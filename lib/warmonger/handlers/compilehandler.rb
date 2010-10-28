@@ -31,6 +31,7 @@ module WarMonger
         command+="-cp #{@classpaths.join(':')} "
       end
       command+=source_path
+      puts command
       system command
     end
     

@@ -5,11 +5,10 @@ module WarMonger
     
     def initialize(&block)
       instance_eval(&block) if block_given?
-      unless root.nil?
-        @webroot ||=  File.join(@root, "WebRoot")
-        @src ||= File.join(@root, "src")
-        @lib ||= File.join(@root, "WebRoot", "WEB-INF", "lib")
-      end
+      @root ||= Dir.pwd
+      @webroot ||=  File.join(@root, "WebRoot")
+      @src ||= File.join(@root, "src")
+      @lib ||= File.join(@root, "WebRoot", "WEB-INF", "lib")
       @compile_target ||= File.join(@deploy_dir, "WEB-INF", "classes") unless @deploy_dir.nil?
     end
     
@@ -23,6 +22,43 @@ module WarMonger
       @deploy_dir = params[0]
     end
     
+    def autodeploy
+      webapp_watcher_pid = watch_webroot
+      compile_watcher_pid = watch_source
+
+      cleanup = lambda { puts "\nbye bye";Process.kill("TERM", compile_watcher_pid); Process.kill("TERM", webapp_watcher_pid);exit}
+      trap("KILL") {cleanup.call}
+      trap("INT") {cleanup.call}
+
+      while(true) do
+        sleep(1)
+      end
+    end
+
+    def watch_webroot
+      # watch the web app directory for changes, deploy them as they happen
+      webapp_watcher = WarMonger::FileWatcher.new @webroot
+      webapp_watcher.add_change_handler(:handler => WarMonger::CopyHandler.new(@webroot, @deploy_dir))
+      Kernel::fork { webapp_watcher.watch }
+    end
+    
+    def watch_source
+      # watch the java source directory for changes
+      compile_watcher = WarMonger::FileWatcher.new @src
+
+      # just copy of files that aren't .java files
+      compile_watcher.add_change_handler(:path_exclude_matcher => /.*.java$/, :handler => WarMonger::CopyHandler.new(@src, @compile_target))
+
+      # if it is a .java file, compile it to the target directory
+      compile_handler = WarMonger::CompileHandler.new(@src, @compile_target)
+      # classpath = File.join(webapp_source_dir, "lib", "*.jar")
+      compile_handler.add_classpath @lib + "/*"
+      compile_handler.add_classpath @compile_target
+      compile_watcher.add_change_handler(:path_matcher => /.*.java$/, :handler => compile_handler)
+
+      Kernel::fork { compile_watcher.watch }
+    end
+        
   end
 end
 # config = ARGV[0] || "config.ru"

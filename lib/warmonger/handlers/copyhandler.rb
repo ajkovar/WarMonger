@@ -17,12 +17,21 @@ module WarMonger
 
     def handle_new source_path
       target_path = get_target_path source_path
-      FileUtils.cp source_path, target_path
+      sleep 0.2
+      system("cp #{source_path} #{target_path}")
+      # FileUtils.cp source_path, target_path
     end
 
     def handle_update source_path
       target_path = get_target_path source_path
-      FileUtils.cp source_path, target_path
+      # puts "-----------------------------------------"
+      # puts(source_path + " COPIED TO " + target_path)
+      # puts source_path
+      # puts target_path
+      # puts "-----------------------------------------"
+      # FileUtils.cp source_path, target_path
+      sleep 0.2
+      system("cp #{source_path} #{target_path}")
     end
 
     def get_target_path source_path
@@ -30,5 +39,16 @@ module WarMonger
       @target_directory + relative_path
     end
 
+    # private
+
+    # def clean_path path
+    #   last_char_of = lambda { |str| str[str.length-1].chr }
+    #   if last_char_of.call(@source_directory)!="/"
+    #     return path+"/" 
+    #   elsif
+    #     return path
+    #   end
+    # end
+    
   end
 end

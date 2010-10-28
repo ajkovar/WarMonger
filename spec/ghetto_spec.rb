@@ -1,4 +1,4 @@
-# this spec is ghetto, son
+# this spec is ghetto, son (its not really a spec)
 require File.join( File.dirname(__FILE__), 'spec_helper' )
 
 source_dir = File.expand_path File.join(File.dirname(__FILE__), 'sandbox/source')

@@ -3,6 +3,11 @@ require File.join( File.dirname(__FILE__), '..', 'spec_helper' )
 describe WarMonger::Project do
     
   describe "initialize" do
+    it "should assume project root to be current directory if none given" do
+      project = WarMonger::Project.new
+      project.root.should == Dir.pwd
+    end
+    
     describe "default assumptions based on project root" do
       before :each do
         @project_root = project_root = File.join("foo", "bar")
